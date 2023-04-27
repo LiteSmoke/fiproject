@@ -19,7 +19,7 @@ class TransactionSerializer(ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ['date', 'type', 'amount', 'description', 'category']
+        fields = ['id', 'date', 'type', 'amount', 'description', 'category']
 
 
 class TransactionCategorySerializer(ModelSerializer):
@@ -27,4 +27,4 @@ class TransactionCategorySerializer(ModelSerializer):
 
     class Meta:
         model = TransactionCategory
-        fields = ['name', 'parent']
+        fields = ['id', 'name', 'parent']

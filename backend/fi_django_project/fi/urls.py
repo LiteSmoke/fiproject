@@ -10,7 +10,7 @@ app_name = 'fi'
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'transactions', TransactionViewSet)
+router.register(r'transaction', TransactionViewSet)
 router.register(r'transaction-category', TransactionCategoryViewSet)
 
 urlpatterns = [

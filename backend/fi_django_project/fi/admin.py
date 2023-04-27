@@ -13,6 +13,13 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ('date', 'type', 'amount', 'description', 'category')
 
 
+class TransactionCategoryAdmin(admin.ModelAdmin):
+    """Transaction category admin form customization"""
+
+    fields = ('name', 'parent')
+    list_display = ('id', 'name', 'parent')
+    readonly_fields = ('id', )
+
 admin.site.register(User)
 admin.site.register(Transaction, TransactionAdmin)
-admin.site.register(TransactionCategory)
+admin.site.register(TransactionCategory, TransactionCategoryAdmin)
