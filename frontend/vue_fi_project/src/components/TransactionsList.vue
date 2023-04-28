@@ -1,7 +1,48 @@
 <template>
     <div>
       <h2>Transactions</h2>
-      <table class="table">
+
+
+      <button class="btn btn-primary" @click="createTransaction()">Create Transaction</button>
+
+      <div v-if="mode === 'new'">
+        <h3>Create Transaction</h3>
+        <form @submit.prevent="addNewTransaction">
+          <div class="form-group">
+            <label for="name">ID</label>
+            <input type="text" class="form-control" v-model="editingTransaction.id" disabled>
+          </div>
+          <div class="form-group">
+            <label for="name">Date</label>
+            <input type="text" class="form-control" v-model="editingTransaction.date">
+          </div>
+          <div class="form-group">
+            <label for="value">Type</label>
+            <input type="text" class="form-control" v-model="editingTransaction.type">
+          </div>
+          <div class="form-group">
+            <label for="value">Amount</label>
+            <input type="text" class="form-control" v-model="editingTransaction.amount">
+          </div>
+          <div class="form-group">
+            <label for="value">Description</label>
+            <input type="text" class="form-control" v-model="editingTransaction.description">
+          </div>
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" class="form-select" v-model="editingTransaction.category">
+              <option v-for="category in transactionCategories" :key="category.id" :value="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-danger" @click="cancelEdit()">Cancel</button>
+        </form>
+      </div>
+
+
+      <table class="table" @keydown="handleKeyDown" tabindex="0" ref="transactionsTable">
         <thead>
           <tr>
             <th>ID</th>
@@ -14,7 +55,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="t in transactions" :key="t.id">
+          <tr v-for="(t, index) in transactions" :key="t.id"
+            :class="{ 'table-active': selectedIndex === index,
+                      'selected-row': selectedIndex === index}"
+            @click="selectedIndex = index">
             <td>{{ t.id }}</td>
             <td>
               <span v-if="mode === 'list' || editingTransaction.id !== t.id">{{ t.date }}</span>
@@ -52,43 +96,8 @@
         </tbody>
       </table>
 
-      <button class="btn btn-primary" @click="createTransaction()">Create Transaction</button>
 
-      <div v-if="mode === 'new'">
-        <h3>Create Transaction</h3>
-        <form @submit.prevent="saveTransaction()">
-          <div class="form-group">
-            <label for="name">ID</label>
-            <input type="text" class="form-control" v-model="editingTransaction.id" disabled>
-          </div>
-          <div class="form-group">
-            <label for="name">Date</label>
-            <input type="text" class="form-control" v-model="editingTransaction.date">
-          </div>
-          <div class="form-group">
-            <label for="value">Type</label>
-            <input type="text" class="form-control" v-model="editingTransaction.type">
-          </div>
-          <div class="form-group">
-            <label for="value">Amount</label>
-            <input type="text" class="form-control" v-model="editingTransaction.amount">
-          </div>
-          <div class="form-group">
-            <label for="value">Description</label>
-            <input type="text" class="form-control" v-model="editingTransaction.description">
-          </div>
-          <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" class="form-select" v-model="editingTransaction.category">
-              <option v-for="category in transactionCategories" :key="category.id" :value="category.id">
-                {{ category.name }}
-              </option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary">Save</button>
-          <button type="button" class="btn btn-danger" @click="cancelEdit()">Cancel</button>
-        </form>
-      </div>
+
     </div>
   </template>
 <!-- <input type="text" class="form-control" v-model="editingTransaction.category"> -->
@@ -106,14 +115,77 @@
         mode: 'list',
         editingTransaction: null,
         editingTransactionID: null,
+        selectedIndex: 0,
       }
     },
     mounted() {
       this.getTransactions();
       this.getTransactionCategories();
     },
+
+    computed: {
+
+      selectedRow() {
+        return this.$refs.transactionsTable.querySelector('.selected-row');
+      }
+
+    },
+
     methods: {
-        getTransactions() {
+
+      handleKeyDown(event) {
+
+        switch (event.key) {
+          case "ArrowUp":
+            if (this.mode !== 'edit'){
+              this.selectPreviousRow();
+              event.preventDefault();
+              this.selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+
+          case "ArrowDown":
+              if (this.mode !== 'edit'){
+                this.selectNextRow();
+                event.preventDefault();
+                this.selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            break;
+
+          case "Enter":
+            if (this.mode === 'list'){
+              this.editTransaction(this.transactions[this.selectedIndex]);
+            } else if (this.mode === 'edit'){
+              this.saveTransaction();
+              this.$nextTick(() => this.$refs.transactionsTable.focus());
+            }
+            break;
+
+          case "Escape":
+            if (this.mode === 'edit'){
+              this.mode = 'list';
+              this.$nextTick(() => this.$refs.transactionsTable.focus());
+            }
+            break;
+
+          default:
+            break;
+        }
+      },
+
+      selectNextRow() {
+        if (this.selectedIndex <= this.transactions.length - 1) {
+          this.selectedIndex += 1;
+        }
+      },
+
+      selectPreviousRow() {
+        if (this.selectedIndex > 0) {
+          this.selectedIndex -= 1;
+        }
+      },
+
+      getTransactions() {
         axios.get(`${hostUrl}/transaction/`)
           .then(response => {
             this.transactions = response.data.sort((a,b) => b.date - a.date);
@@ -136,15 +208,24 @@
         console.log(this.editingTransaction);
       },
       deleteTransaction(transaction) {
-        axios.delete(`${hostUrl}/transaction/${transaction.id}/`)
-          .then(() => {
-            // this.transactions = this.transactions.filter(i => i.id !== transaction.id)
-            this.getTransactions();
-          })
-      },
-      saveTransaction() {
 
-        // console.log(Vue.version);
+        const confirmMessage = `Are you sure you want to delete transaction ${transaction.date} - ${transaction.amount} - ${transaction.description} ?`;
+
+        if (window.confirm(confirmMessage)){
+          axios.delete(`${hostUrl}/transaction/${transaction.id}/`)
+            .then(() => {
+              // this.transactions = this.transactions.filter(i => i.id !== transaction.id)
+              this.getTransactions();
+            })
+        }
+      },
+
+      addNewTransaction(){
+        this.saveTransaction();
+        this.getTransactions();
+      },
+
+      saveTransaction() {
 
         const isNew = !this.editingTransaction.id;
         axios[isNew ? 'post' : 'put'](isNew ? `${hostUrl}/transaction/` : `${hostUrl}/transaction/${this.editingTransaction.id}/`, this.editingTransaction)
