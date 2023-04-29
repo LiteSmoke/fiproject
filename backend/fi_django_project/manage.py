@@ -6,6 +6,9 @@ import sys
 def main():
     """Run administrative tasks."""
 
+    print("=============os.environ.get('DJANGO_SETTINGS_MODULE')=============")
+    print(os.environ.get('DJANGO_SETTINGS_MODULE'))
+
     if os.environ.get('DJANGO_SETTINGS_MODULE') == 'fi_django_project.settings.prod':
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fi_django_project.settings.prod')
         print("========== PROD ENVIRONMENT ===========")
