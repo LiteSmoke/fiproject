@@ -1,6 +1,8 @@
 #data folder with import files
 data/
 
+cmd.exe
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
