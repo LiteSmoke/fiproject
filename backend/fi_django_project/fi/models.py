@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from datetime import date
+from django.utils import timezone
 
 # Create your models here.
 
@@ -31,7 +32,7 @@ class Transaction(models.Model):
         ('I', 'Income'),
     ]
 
-    date = models.DateField(blank=False, default=date.today())
+    date = models.DateField(blank=False, default=timezone.now)
     type = models.CharField(
         max_length=1,
         blank=False,
